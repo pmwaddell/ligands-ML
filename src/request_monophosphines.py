@@ -1,4 +1,7 @@
+from fileinput import filename
+
 import requests
+import re
 from time import sleep
 
 from rdkit import Chem
@@ -55,10 +58,57 @@ def prune_phos_df(phos_df: pd.DataFrame) -> pd.DataFrame:
     # This removes cases which include multiple molecules ("disconnected structures") and salts.
     phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\.|\+|\-")]
 
-    # Require one P atom only and exclusively main group elements:
-
+    # Require one P atom only and only certain main group elements:
+    phos_df = phos_df[prune_by_elements(phos_df.MolecularFormula)]
 
     return phos_df.reset_index()
+
+
+def prune_by_elements(mol_formulas: pd.Series) -> pd.Series:
+    result = []
+    for mol_formula in mol_formulas:
+        result.append(prune_by_elements_helper(mol_formula))
+    return pd.Series(result, index=mol_formulas.index)
+
+
+def prune_by_elements_helper(mol_formula: str) -> bool:
+    # Need to add an explicit 1 to the formula after elements that occur only once:
+    indices_to_add_1 = []
+    for i, c in enumerate(mol_formula):
+        if c.isalpha():
+            if i == len(mol_formula) - 1 or mol_formula[i + 1].isupper():
+                # The index must increase for each 1 that appears earlier, since the str gets longer each time:
+                indices_to_add_1.append((i + 1) + len(indices_to_add_1))
+    for i in indices_to_add_1:
+        mol_formula = mol_formula[:i] + "1" + mol_formula[i:]
+
+    # Split the string into each element and the number of times it appears:
+    s = re.split(r'(\d+)', mol_formula)
+    if s[-1] == "":
+        s.pop()
+
+    elems_to_count = {}
+    for i in range(len(s)):
+        if i % 2 == 0:
+            elems_to_count[s[i]] = int(s[i + 1])
+
+    desired_elems = {
+        "H",
+        "B", "Ga", "In", "Tl",
+        "C", "Si", "Ge", "Sn", "Pb",
+        "N", "P", "As", "Sb", "Bi",
+        "O", "S", "Se", "Te",
+        "F", "Cl", "Br", "I"
+    }
+
+    # We only want monophosphines, so limit P count to 1:
+    if elems_to_count["P"] > 1:
+        return False
+    # Limit ourselves to compounds that contain only the desired elements:
+    for elem in elems_to_count.keys():
+        if elem not in desired_elems:
+            return False
+    return True
 
 
 def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phos.png") -> None:
@@ -75,4 +125,4 @@ def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phos.png") -> None:
 #     request_monophosphines(max_records=100)
 # )
 
-draw_from_phos_df(request_monophosphines(max_records=1000))
+draw_from_phos_df(request_monophosphines(max_records=1500))
