@@ -24,7 +24,7 @@ def request_monophosphines(properties: tuple=
         props += p + ","
     props += "/"
 
-    # If max_rec >= 0, there is no maximum:
+    # If max_rec < 0, there is no maximum:
     if max_records > 0:
         max_records = f"?MaxRecords={max_records}"
     else:
@@ -53,14 +53,10 @@ def prune_phos_df(phos_df: pd.DataFrame) -> pd.DataFrame:
 
     # Require SMILES does not have "+", "-" or "."
     # This removes cases which include multiple molecules ("disconnected structures") and salts.
-    phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\.")]
-    phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\+")]
-    phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\-")]
+    phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\.|\+|\-")]
 
-    # Require one P atom only and only main group elements:
-    # parse molecular formula, etc.
+    # Require one P atom only and exclusively main group elements:
 
-    # could we also enforce no salts and restrict to cases that represent just one molecule?
 
     return phos_df.reset_index()
 
