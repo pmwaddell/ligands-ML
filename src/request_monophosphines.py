@@ -3,18 +3,20 @@ from time import sleep
 
 from rdkit import Chem
 from rdkit.Chem import Draw
-from IPython.display import Image
 import pandas as pd
 
 
-def prettyprint_phos_df(phos_df):
+def prettyprint_phos_df(phos_df: pd.DataFrame) -> None:
+    """Prints a phosphine DataFrame in a nice and legible way."""
     with pd.option_context("display.max_rows", None, "display.max_columns", None):
         print(phos_df.drop("CanonicalSMILES", axis=1))  # note that dropping does not occur in-place
 
 
-def request_monophosphines(properties=("MolecularFormula","MolecularWeight","CanonicalSMILES","Complexity","Charge"),
-                           max_records=-1,
-                           smarts="[CX4,c][PX3]([CX4,c])[CX4,c]") -> pd.DataFrame:
+def request_monophosphines(properties: tuple=
+                           ("MolecularFormula","MolecularWeight","CanonicalSMILES","Complexity","Charge"),
+                           max_records: int=-1,
+                           smarts: str="[CX4,c][PX3]([CX4,c])[CX4,c]") -> pd.DataFrame:
+    """Makes an API request to PubChem for phosphines (i.e. PR3) and prunes the results (see prun_phos_df)."""
     api = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/"
 
     props = "property/"
@@ -39,7 +41,8 @@ def request_monophosphines(properties=("MolecularFormula","MolecularWeight","Can
     return prune_phos_df(phos_df)
 
 
-def prune_phos_df(phos_df) -> pd.DataFrame:
+def prune_phos_df(phos_df: pd.DataFrame) -> pd.DataFrame:
+    """Removes undesired results from a PubChem API request for general phosphines."""
     # Require Charge = 0:
     phos_df = phos_df[phos_df.Charge == 0]
     # Charge column is no longer needed, so it can be dropped:
@@ -48,15 +51,21 @@ def prune_phos_df(phos_df) -> pd.DataFrame:
     # Require MW <= 400:
     phos_df = phos_df[phos_df.MolecularWeight <= 400]
 
+    # Require SMILES does not have "+", "-" or "."
+    # This removes cases which include multiple molecules ("disconnected structures") and salts.
+    phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\.")]
+    phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\+")]
+    phos_df = phos_df[~phos_df.CanonicalSMILES.str.contains(r"\-")]
+
     # Require one P atom only and only main group elements:
     # parse molecular formula, etc.
 
     # could we also enforce no salts and restrict to cases that represent just one molecule?
 
-    return phos_df
+    return phos_df.reset_index()
 
 
-def draw_from_phos_df(phos_df, filename="phos.png"):
+def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phos.png") -> None:
     """Draws the set of phosphines from a phosphine DataFrame."""
     Draw.MolsToGridImage(
         [Chem.MolFromSmiles(smiles) for smiles in phos_df["CanonicalSMILES"]],
