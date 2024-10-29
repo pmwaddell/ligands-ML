@@ -109,7 +109,7 @@ def prune_by_elements_helper(mol_formula: str) -> bool:
     return True
 
 
-def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phos.png") -> None:
+def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phosphine_set.png") -> None:
     """Draws the set of phosphines from a phosphine DataFrame."""
     Draw.MolsToGridImage(
         [Chem.MolFromSmiles(smiles) for smiles in phos_df["CanonicalSMILES"]],
@@ -120,8 +120,4 @@ def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phos.png") -> None:
 
 
 if __name__ == "__main__":
-    # prettyprint_phos_df(
-    #     request_monophosphines(max_records=100)
-    # )
-
     request_monophosphines(max_records=1500).to_csv('data/phosphine_set.csv')
