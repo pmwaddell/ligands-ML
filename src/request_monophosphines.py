@@ -1,5 +1,3 @@
-from fileinput import filename
-
 import requests
 import re
 from time import sleep
@@ -83,7 +81,7 @@ def prune_by_elements_helper(mol_formula: str) -> bool:
         mol_formula = mol_formula[:i] + "1" + mol_formula[i:]
 
     # Split the string into each element and the number of times it appears:
-    s = re.split(r'(\d+)', mol_formula)
+    s = re.split(r"(\d+)", mol_formula)
     if s[-1] == "":
         s.pop()
 
@@ -117,12 +115,13 @@ def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phos.png") -> None:
         [Chem.MolFromSmiles(smiles) for smiles in phos_df["CanonicalSMILES"]],
         molsPerRow=20,
         subImgSize=(400,400),
-        legends=phos_df['CID'].astype(str).to_list()
+        legends=phos_df["CID"].astype(str).to_list()
     ).save("images/" + filename)
 
 
-# prettyprint_phos_df(
-#     request_monophosphines(max_records=100)
-# )
+if __name__ == "__main__":
+    # prettyprint_phos_df(
+    #     request_monophosphines(max_records=100)
+    # )
 
-draw_from_phos_df(request_monophosphines(max_records=1500))
+    request_monophosphines(max_records=1500).to_csv('data/phosphine_set.csv')
