@@ -47,7 +47,7 @@ def prune_phos_df(phos_df: pd.DataFrame) -> pd.DataFrame:
     # Require Charge = 0:
     phos_df = phos_df[phos_df.Charge == 0]
     # Charge column is no longer needed, so it can be dropped:
-    phos_df.drop("Charge", axis=1, inplace=True)
+    phos_df = phos_df.drop("Charge", axis=1)
 
     # Require MW <= 400:
     phos_df = phos_df[phos_df.MolecularWeight <= 400]
@@ -109,15 +109,22 @@ def prune_by_elements_helper(mol_formula: str) -> bool:
     return True
 
 
-def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phosphine_set.png") -> None:
+def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phosphine_set.png", legend: str="CID") -> None:
     """Draws the set of phosphines from a phosphine DataFrame."""
-    Draw.MolsToGridImage(
-        [Chem.MolFromSmiles(smiles) for smiles in phos_df["CanonicalSMILES"]],
-        molsPerRow=20,
-        subImgSize=(400,400),
-        legends=phos_df["CID"].astype(str).to_list()
-    ).save("images/" + filename)
+    if legend:
+        Draw.MolsToGridImage(
+            [Chem.MolFromSmiles(smiles) for smiles in phos_df["CanonicalSMILES"]],
+            molsPerRow=20,
+            subImgSize=(400,400),
+            legends=phos_df["legend"].astype(str).to_list()
+        ).save("images/" + filename)
+    else:
+        Draw.MolsToGridImage(
+            [Chem.MolFromSmiles(smiles) for smiles in phos_df["CanonicalSMILES"]],
+            molsPerRow=20,
+            subImgSize=(400,400)
+        ).save("images/" + filename)
 
 
 if __name__ == "__main__":
-    request_monophosphines(max_records=1500).to_csv('data/phosphine_set.csv')
+    request_monophosphines(max_records=1500).to_csv('data/phosphine_set_2.csv')
