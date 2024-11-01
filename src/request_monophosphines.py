@@ -7,12 +7,6 @@ from rdkit.Chem import Draw
 import pandas as pd
 
 
-def prettyprint_phos_df(phos_df: pd.DataFrame) -> None:
-    """Prints a phosphine DataFrame in a nice and legible way."""
-    with pd.option_context("display.max_rows", None, "display.max_columns", None):
-        print(phos_df.drop("CanonicalSMILES", axis=1))  # note that dropping does not occur in-place
-
-
 def request_monophosphines(properties: tuple=
                            ("MolecularFormula","MolecularWeight","CanonicalSMILES","Complexity","Charge"),
                            max_records: int=-1,
@@ -63,6 +57,10 @@ def prune_phos_df(phos_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def prune_by_elements(mol_formulas: pd.Series) -> pd.Series:
+    """
+    Makes a T/F mask to prune the phosphine DataFrame based on whether the mol. formula contains only
+    the desired main group elements, and contains at most one P atom.
+    """
     result = []
     for mol_formula in mol_formulas:
         result.append(prune_by_elements_helper(mol_formula))
@@ -70,6 +68,10 @@ def prune_by_elements(mol_formulas: pd.Series) -> pd.Series:
 
 
 def prune_by_elements_helper(mol_formula: str) -> bool:
+    """
+    Determines whether a mol. formula conforms to our desired constraints, i.e. only desired main group elements
+    and only one P atom.
+    """
     # Need to add an explicit 1 to the formula after elements that occur only once:
     indices_to_add_1 = []
     for i, c in enumerate(mol_formula):
@@ -127,4 +129,4 @@ def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phosphine_set.png", 
 
 
 if __name__ == "__main__":
-    request_monophosphines(max_records=1500).to_csv('data/phosphine_set_2.csv')
+    request_monophosphines(max_records=1500).to_csv('data/pubchem_request/phosphine_set_new.csv')
