@@ -23,15 +23,15 @@ def make_geom_opt_inp_from_xyz(xyz_filename: str, inp_destination_path: str,
 
 
 # TODO: change log messages so they all start with the CID?
-def geom_opt(path_to_xyz_files: str="data/conf_search_P",
-             functional: str="B3LYP", basis_set: str="def2-SVP", redo_all=False) -> None:
+def geom_opt(path_to_xyz_files: str, destination_path: str,
+             functional: str="BP86", basis_set: str="def2-SVP", redo_all=False) -> None:
     """Performs geometry optimizations based on the xyz files in the given directory."""
     log = f"Geometry optimization started {datetime.datetime.now()}\n\nCreating directories:\n"
     for filename in os.listdir(path_to_xyz_files):
         cid = filename[:-4]
         # Make directories and input files from the xyz files from the conformer search:
         try:
-            mkdir(f"data/geom_opt/{cid}")
+            mkdir(f"{destination_path}/{cid}")
         except Exception as e:
             log += f"{cid}: Directory creation in geom_opt unsuccessful with exception {e}.\n"
             continue
@@ -40,7 +40,7 @@ def geom_opt(path_to_xyz_files: str="data/conf_search_P",
             functional=functional,
             basis_set=basis_set,
             xyz_filename=f"{path_to_xyz_files}/{cid}.xyz",
-            inp_destination_path=f"data/geom_opt/{cid}/{cid}.inp")
+            inp_destination_path=f"{destination_path}/{cid}/{cid}.inp")
 
     log += "\nGeometry optimzation part:\n"
     print()
@@ -50,30 +50,30 @@ def geom_opt(path_to_xyz_files: str="data/conf_search_P",
         if not redo_all:
             # If an existing .out file is found in the directory, check if it seems that it was from a successful calc.
             # If so, skip doing the geometry optimization for that CID.
-            if os.path.exists(f"data/geom_opt/{cid}/{cid}.out"):
-                with open(f"data/geom_opt/{cid}/{cid}.out", 'r') as out_file:
+            if os.path.exists(f"{destination_path}/{cid}/{cid}.out"):
+                with open(f"{destination_path}/{cid}/{cid}.out", 'r') as out_file:
                     if out_file.read().splitlines()[-2].strip() == "****ORCA TERMINATED NORMALLY****":
-                        msg = (f"Existing .out file from completed calculation found in data/geom_opt/{cid}/, "
+                        msg = (f"Existing .out file from completed calculation found in {destination_path}/{cid}/, "
                                f"skipping calculation.")
                         print(msg)
                         log += msg + "\n"
                         continue
                     else:
                         msg = (f"Existing .out file from apparently unsuccessful calculation found "
-                               f"in data/geom_opt/{cid}/, redoing calculation.")
+                               f"in {destination_path}/{cid}/, redoing calculation.")
                         print(msg)
                         log += msg + "\n"
 
         print(f"Performing geometry optimization on {cid}: ", end="")
-        orca_command = f"C:\ORCA_6.0.0\orca data/geom_opt/{cid}/{cid}.inp > data/geom_opt/{cid}/{cid}.out"
+        orca_command = f"C:\ORCA_6.0.0\orca {destination_path}/{cid}/{cid}.inp > {destination_path}/{cid}/{cid}.out"
         subprocess.run(orca_command, shell=True)
         print("complete.")
 
     print("\nGeometry optimizations complete.")
-
+    log += f"\nGeometry optimization started {datetime.datetime.now()}\n"
     with open("logs/geom_opt_log.txt", "w") as log_file:
         log_file.write(log)
 
 
 if __name__ == "__main__":
-    geom_opt()
+    geom_opt(path_to_xyz_files="data/conf_search_P", destination_path="data/geom_opt_PO_BP86")
