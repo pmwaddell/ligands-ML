@@ -9,9 +9,11 @@ from utils import mkdir
 
 
 def make_geom_opt_inp_from_xyz(xyz_filename: str, inp_destination_path: str,
-                               functional: str="B3LYP", basis_set: str="def2-SVP") -> None:
+                               functional: str="BP86", basis_set: str="def2-SVP", cores=6) -> None:
     """Produces an ORCA input file for geom. opt. from xyz file."""
-    header = f"! {functional} {basis_set} Opt\n\n* xyz 0 1\n"
+    # The choices of keywords here are from: https://sites.google.com/site/orcainputlibrary/geometry-optimizations
+    # Here we're using 4 cores.
+    header = f"! RIJONX {functional} {basis_set} D3BJ TIGHTSCF Opt\n%pal\nnprocs {cores}\nend\n\n* xyz 0 1\n"
     with open(xyz_filename, 'r') as xyz_file:
         # Remove the initial lines of the xyz file, leaving only the atoms and their coordinates:
         inp_contents = "\n".join(xyz_file.read().splitlines()[2:])
@@ -19,11 +21,13 @@ def make_geom_opt_inp_from_xyz(xyz_filename: str, inp_destination_path: str,
     with open(inp_destination_path, "w") as inp_file:
         inp_file.write(header + inp_contents + "\n*")
 
+
 # TODO: change log messages so they all start with the CID?
-def geom_opt(functional: str="B3LYP", basis_set: str="def2-SVP", redo_all=False) -> None:
-    """Performs geometry optimizations based on the xyz files in the conf_search directory."""
-    log = f"Geometry optimization started {datetime.datetime.now()}\nCreating directories:\n"
-    for filename in os.listdir("data/cf_tst"):
+def geom_opt(path_to_xyz_files: str="data/conf_search_P",
+             functional: str="B3LYP", basis_set: str="def2-SVP", redo_all=False) -> None:
+    """Performs geometry optimizations based on the xyz files in the given directory."""
+    log = f"Geometry optimization started {datetime.datetime.now()}\n\nCreating directories:\n"
+    for filename in os.listdir(path_to_xyz_files):
         cid = filename[:-4]
         # Make directories and input files from the xyz files from the conformer search:
         try:
@@ -35,12 +39,12 @@ def geom_opt(functional: str="B3LYP", basis_set: str="def2-SVP", redo_all=False)
         make_geom_opt_inp_from_xyz(
             functional=functional,
             basis_set=basis_set,
-            xyz_filename=f"data/conf_search/{cid}.xyz",
+            xyz_filename=f"{path_to_xyz_files}/{cid}.xyz",
             inp_destination_path=f"data/geom_opt/{cid}/{cid}.inp")
 
     log += "\nGeometry optimzation part:\n"
     print()
-    for filename in os.listdir("data/cf_tst"):
+    for filename in os.listdir(path_to_xyz_files):
         cid = filename[:-4]
 
         if not redo_all:
@@ -61,7 +65,7 @@ def geom_opt(functional: str="B3LYP", basis_set: str="def2-SVP", redo_all=False)
                         log += msg + "\n"
 
         print(f"Performing geometry optimization on {cid}: ", end="")
-        orca_command = f"orca data/geom_opt/{cid}/{cid}.inp > data/geom_opt/{cid}/{cid}.out"
+        orca_command = f"C:\ORCA_6.0.0\orca data/geom_opt/{cid}/{cid}.inp > data/geom_opt/{cid}/{cid}.out"
         subprocess.run(orca_command, shell=True)
         print("complete.")
 

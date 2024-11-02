@@ -1,0 +1,5 @@
+Geometry optimization started 2024-11-01 21:55:03.702305
+
+Creating directories:
+
+Geometry optimzation part:
