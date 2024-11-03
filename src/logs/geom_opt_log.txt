@@ -1,7 +1,7 @@
-Geometry optimization started 2024-11-02 16:15:52.147319
+Single Point Calculation started 2024-11-03 13:51:31.723379
 
 Creating directories:
 
-Geometry optimzation part:
+Single Point Calculation part:
 
-Geometry optimization started 2024-11-02 16:15:59.368241
+Single Point Calculation ended 2024-11-03 15:35:46.920804

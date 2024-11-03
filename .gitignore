@@ -1,2 +1,11 @@
 /misc
 /reading
+
+*.bibtex
+*.densities
+*.densitiesinfo
+*.gbw
+*.property.txt
+*.engrad
+*.opt
+*_trj.xyz

@@ -1,5 +1,5 @@
 Things that are needed:
 
-* rdkit
-* ORCA (make sure you check the parallel option), with environment variable set and absolute path indicated in the yaml file I will add.
+* rdkit, basically everything in the rdkit-env environment except like autode I think.
+* ORCA (make sure you check the parallel option), with the absolute path indicated in config.yaml.
 * Microsoft MPI I assume
