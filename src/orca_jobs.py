@@ -12,15 +12,17 @@ from utils import mkdir
 
 
 def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: str, RI: str,
-                      functional: str="BP86", basis_set: str="def2-SVP",
-                      dispersion_correction:str ="D3BJ", cores=6) -> None:
+                      functional: str="BP86", basis_set: str="def2-SVP", dispersion_correction:str ="D3BJ",
+                      grid:str ="", freq: bool=False, NMR: bool=False, cores=6) -> None:
     """Produces an ORCA input file for geom. opt. from xyz file."""
     # The choices of keywords here are from: https://sites.google.com/site/orcainputlibrary/geometry-optimizations
     # RI: RI-J approximation for Coulomb integrals: speed calculations at cost of small error, used for GGA calcs.
     # RIJCOSX should be used with hybrid functionals.
     # D3BJ: Grimme's D3 dispersion correction, with Becke-Johnson damping.
     # TIGHTSCF: convergence tolerance level, this is recommended for geometry optimizations.
+    # NormalSCF: used for single point calculations.
     # Here we're using 6 cores by default.
+
     if job_type == "Geometry Optimization":
         job_keywords = "TIGHTSCF Opt"
     elif job_type == "Single Point Calculation":
@@ -28,7 +30,12 @@ def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: st
     else:
         raise Exception(f"Unknown job type {job_type}")
 
-    header = f"! {RI} {functional} {basis_set} {dispersion_correction} {job_keywords}\n%pal\nnprocs {cores}\nend\n\n* xyz 0 1\n"
+    freq = "FREQ" if freq else ""
+    NMR = "NMR" if NMR else ""
+    if grid != "":
+        grid = f"\n! {grid}"
+
+    header = f"! {RI} {functional} {basis_set} {dispersion_correction} {job_keywords} {freq} {NMR}{grid}\n%pal\nnprocs {cores}\nend\n\n* xyz 0 1\n"
     with open(xyz_filename, 'r') as xyz_file:
         # Remove the initial lines of the xyz file, leaving only the atoms and their coordinates:
         inp_contents = "\n".join(xyz_file.read().splitlines()[2:])
@@ -39,8 +46,8 @@ def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: st
 
 # TODO: change log messages so they all start with the CID?
 def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str, RI: str,
-                   functional: str="BP86", basis_set: str="def2-SVP", dispersion_correction:str ="D3BJ",
-                   redo_all=False) -> None:
+                   functional: str="BP86", basis_set: str="def2-SVP", dispersion_correction:str ="D3BJ", grid: str="",
+                   freq: bool=False, NMR: bool=False, redo_all: bool=False) -> None:
     """Performs ORCA calculations based on the xyz files in the given directory."""
     log = f"{job_type} started {datetime.datetime.now()}\n\nCreating directories:\n"
 
@@ -66,6 +73,9 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
             dispersion_correction=dispersion_correction,
             RI=RI,
             job_type=job_type,
+            grid=grid,
+            freq=freq,
+            NMR=NMR,
             xyz_filename=xyz_file_path,
             inp_destination_path=f"{destination_path}/{cid}/{cid}.inp"
         )
@@ -100,16 +110,19 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
         orca_command = f"{orca_path} {destination_path}/{cid}/{cid}.inp > {destination_path}/{cid}/{cid}.out"
         subprocess.run(orca_command, shell=True)
         print("complete.")
+        log += f"{job_type} for {cid} completed at {datetime.datetime.now()}\n"
+        with open("logs/log.txt", "w") as log_file:
+            log_file.write(log)
 
     print(f"\n{job_type}s complete.")
     log += f"\n{job_type} ended {datetime.datetime.now()}\n"
-    with open("logs/geom_opt_log.txt", "w") as log_file:
+    with open("logs/log.txt", "w") as log_file:
         log_file.write(log)
 
 
 if __name__ == "__main__":
-    orca_batch_job(path_to_xyz_files="data/conf_search_PNiCO3",
-                   destination_path="data/geom_opt_PNiCO3_B3LYP",
+    orca_batch_job(path_to_xyz_files="data/conf_search_PNiCO3_MMFF",
+                   destination_path="data/geom_opt_MMFF_PNiCO3_B3LYP",
                    functional="B3LYP",
                    basis_set="def2-TZVP",
                    RI='RIJCOSX',

@@ -45,5 +45,5 @@ def conf_search_xyzs_from_phos_set(phos_set_filename: str, destination_path: str
 
 if __name__ == "__main__":
     conf_search_xyzs_from_phos_set(phos_set_filename="data/modified_requests/PNiCO3_set_redux.csv",
-                                   destination_path="data/conf_search_PNiCO3",
-                                   force_field="UFF")
+                                   destination_path="data/conf_search_PNiCO3_MMFF",
+                                   force_field="MMFF")

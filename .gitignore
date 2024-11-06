@@ -1,5 +1,6 @@
 /misc
 /reading
+/src/old_data
 
 *.bibtex
 *.densities
@@ -9,3 +10,5 @@
 *.engrad
 *.opt
 *_trj.xyz
+*_steric.py
+*_transform.xyz
