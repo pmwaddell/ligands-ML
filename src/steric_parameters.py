@@ -22,6 +22,12 @@
 
 
 # ALSO use morfeus: https://github.com/digital-chemistry-laboratory/morfeus
-import morfeus
+from morfeus import read_xyz, ConeAngle, Sterimol
 
 
+elements, coordinates = read_xyz("data/geom_opt_PO_BP86/11776/11776.xyz")
+# cone_angle = ConeAngle(elements, coordinates, 7)
+# print(cone_angle.cone_angle)
+
+sterimol = Sterimol(elements, coordinates, 8, 7)
+sterimol.print_report()

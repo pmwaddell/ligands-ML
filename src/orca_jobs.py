@@ -30,7 +30,7 @@ def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: st
     else:
         raise Exception(f"Unknown job type {job_type}")
 
-    freq = "FREQ" if freq else ""
+    freq = "Freq" if freq else ""
     NMR = "NMR" if NMR else ""
     if grid != "":
         grid = f"\n! {grid}"
@@ -44,7 +44,6 @@ def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: st
         inp_file.write(header + inp_contents + "\n*")
 
 
-# TODO: change log messages so they all start with the CID?
 def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str, RI: str,
                    functional: str="BP86", basis_set: str="def2-SVP", dispersion_correction:str ="D3BJ", grid: str="",
                    freq: bool=False, NMR: bool=False, redo_all: bool=False) -> None:
@@ -58,6 +57,8 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
     for xyz_file_path in xyz_file_paths:
         # We are trying to stick to Linux-style path formatting, so replace the Windows \\ with /:
         xyz_file_path = xyz_file_path.replace("\\", "/")
+        # Basically, for all intents and purposes, CID herein just means the unique label for this molecule.
+        # It wouldn't have to be an actual CID.
         cid = xyz_file_path.split("/")[-1][:-4]
         cids.append(cid)
 
@@ -121,8 +122,18 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
 
 
 if __name__ == "__main__":
-    orca_batch_job(path_to_xyz_files="data/conf_search_PNiCO3_MMFF",
-                   destination_path="data/geom_opt_MMFF_PNiCO3_B3LYP",
+    print("Ligand geometry optimizations: ")
+    orca_batch_job(path_to_xyz_files="diimine_data/conf_search_ligand",
+                   destination_path="diimine_data/geom_opt_ligand_BP86",
+                   functional="BP86",
+                   basis_set="def2-SVP",
+                   RI='RI',
+                   dispersion_correction="D3BJ",
+                   job_type="Geometry Optimization")
+
+    print("\n\nNi carbonyl complex geometry optimizations: ")
+    orca_batch_job(path_to_xyz_files="diimine_data/conf_search_NiCO2",
+                   destination_path="diimine_data/geom_opt_NiCO2",
                    functional="B3LYP",
                    basis_set="def2-TZVP",
                    RI='RIJCOSX',

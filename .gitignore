@@ -1,6 +1,8 @@
 /misc
 /reading
 /src/old_data
+/src/data
+/src/diimine_data
 
 *.bibtex
 *.densities
