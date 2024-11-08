@@ -76,4 +76,4 @@ if __name__ == "__main__":
 
     dis.insert(0, "ligand_key", ligand_keys)
     dis.set_index("ligand_key", inplace=True)
-    dis.to_csv("diimine_data/dis.csv")
+    dis.to_csv("diimine_data/diimine_smiles.csv")

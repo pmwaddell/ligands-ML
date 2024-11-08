@@ -125,8 +125,8 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
 
 if __name__ == "__main__":
     print("Ligand geometry optimizations: ")
-    orca_batch_job(path_to_xyz_files="diimine_data/conf_search_ligand",
-                   destination_path="diimine_data/geom_opt_ligand_BP86",
+    orca_batch_job(path_to_xyz_files="data/diimine_data/conf_search_ligand",
+                   destination_path="data/diimine_data/geom_opt_ligand_BP86",
                    functional="BP86",
                    basis_set="def2-SVP",
                    RI='RI',
@@ -134,12 +134,10 @@ if __name__ == "__main__":
                    job_type="Geometry Optimization")
 
     print("\n\nNi carbonyl complex geometry optimizations: ")
-    orca_batch_job(path_to_xyz_files="diimine_data/conf_search_NiCO2",
-                   destination_path="diimine_data/geom_opt_NiCO2",
+    orca_batch_job(path_to_xyz_files="data/diimine_data/conf_search_NiCO2",
+                   destination_path="data/diimine_data/geom_opt_NiCO2",
                    functional="B3LYP",
                    basis_set="def2-TZVP",
                    RI='RIJCOSX',
                    dispersion_correction="D3BJ",
                    job_type="Geometry Optimization")
-
-    # TODO: add options for overall charge, since it will be needed for the cationic complexes...

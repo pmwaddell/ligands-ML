@@ -25,7 +25,7 @@
 from morfeus import read_xyz, ConeAngle, Sterimol
 
 
-elements, coordinates = read_xyz("phosphine_data/geom_opt_PO_BP86/11776/11776.xyz")
+elements, coordinates = read_xyz("data/phosphine_data/geom_opt_PO_BP86/11776/11776.xyz")
 # cone_angle = ConeAngle(elements, coordinates, 7)
 # print(cone_angle.cone_angle)
 

@@ -129,4 +129,4 @@ def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phosphine_set.png", 
 
 
 if __name__ == "__main__":
-    request_monophosphines(max_records=1500).to_csv('phosphine_data/pubchem_requests/phosphine_set_new.csv')
+    request_monophosphines(max_records=1500).to_csv('data/phosphine_data/pubchem_requests/phosphine_set_new.csv')

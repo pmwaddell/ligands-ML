@@ -43,26 +43,26 @@ def conformer_search(mols_filename: str, smiles_col: str, label_col: str,
 
 
 if __name__ == "__main__":
-    conformer_search(mols_filename="diimine_data/dis.csv",
+    conformer_search(mols_filename="data/diimine_data/diimine_smiles.csv",
                      smiles_col="ligand",
                      label_col="ligand_key",
-                     destination_path="diimine_data/conf_search_ligand",
+                     destination_path="data/diimine_data/conf_search_ligand",
                      force_field="MMFF")
     print()
-    conformer_search(mols_filename="diimine_data/dis.csv",
+    conformer_search(mols_filename="data/diimine_data/diimine_smiles.csv",
                      smiles_col="NiCO2",
                      label_col="ligand_key",
-                     destination_path="diimine_data/conf_search_NiCO2",
+                     destination_path="data/diimine_data/conf_search_NiCO2",
                      force_field="MMFF")
     print()
-    conformer_search(mols_filename="diimine_data/dis.csv",
+    conformer_search(mols_filename="data/diimine_data/diimine_smiles.csv",
                      smiles_col="NiACN",
                      label_col="ligand_key",
-                     destination_path="diimine_data/conf_search_NiACN",
+                     destination_path="data/diimine_data/conf_search_NiACN",
                      force_field="MMFF")
     print()
-    conformer_search(mols_filename="diimine_data/dis.csv",
+    conformer_search(mols_filename="data/diimine_data/diimine_smiles.csv",
                      smiles_col="NiE",
                      label_col="ligand_key",
-                     destination_path="diimine_data/conf_search_NiE",
+                     destination_path="data/diimine_data/conf_search_NiE",
                      force_field="MMFF")
