@@ -3,7 +3,7 @@
 # from dbstep.sterics import buried_vol
 #
 # # make sure that atom1 and atom2 orient things the right way, so we're measuring the phosphine instead of the CO3...
-# mol = db.dbstep("data/geom_opt_MMFF_PNiCO3_B3LYP/11776/11776.xyz", atom1=7, atom2=8, sterimol=True, volume=True)
+# mol = db.dbstep("phosphine_data/geom_opt_PNiCO3_B3LYP/11776/11776.xyz", atom1=7, atom2=8, sterimol=True, volume=True)
 #
 # # Sterimol parameters
 # print([mol.L, mol.Bmin, mol.Bmax, mol.bur_vol])
@@ -25,7 +25,7 @@
 from morfeus import read_xyz, ConeAngle, Sterimol
 
 
-elements, coordinates = read_xyz("data/geom_opt_PO_BP86/11776/11776.xyz")
+elements, coordinates = read_xyz("phosphine_data/geom_opt_PO_BP86/11776/11776.xyz")
 # cone_angle = ConeAngle(elements, coordinates, 7)
 # print(cone_angle.cone_angle)
 

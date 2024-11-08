@@ -1,7 +1,0 @@
-Single Point Calculation started 2024-11-03 13:51:31.723379
-
-Creating directories:
-
-Single Point Calculation part:
-
-Single Point Calculation ended 2024-11-03 15:35:46.920804

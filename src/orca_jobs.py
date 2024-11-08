@@ -51,7 +51,7 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
     log = f"{job_type} started {datetime.datetime.now()}\n\nCreating directories:\n"
 
     # Recursively search for the paths to all xyz files anywhere under the given path:
-    xyz_file_paths = glob.glob(f"{path_to_xyz_files}/**/*[0-9].xyz", recursive=True)
+    xyz_file_paths = glob.glob(f"{path_to_xyz_files}/**/*.xyz", recursive=True)
     cids = []
 
     for xyz_file_path in xyz_file_paths:
@@ -139,3 +139,5 @@ if __name__ == "__main__":
                    RI='RIJCOSX',
                    dispersion_correction="D3BJ",
                    job_type="Geometry Optimization")
+
+    # TODO: add options for overall charge, since it will be needed for the cationic complexes...

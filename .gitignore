@@ -1,9 +1,10 @@
 /misc
 /reading
-/src/old_data
-/src/data
+/old_data
+/src/phosphine_data
 /src/diimine_data
 
+log.txt
 *.bibtex
 *.densities
 *.densitiesinfo
