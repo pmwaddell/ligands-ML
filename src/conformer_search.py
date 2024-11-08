@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import rdDistGeom
@@ -29,7 +31,15 @@ def lowest_conf_search_from_smiles(smiles: str, label: str, destination_path: st
             min_energy_index = i
             min_energy = results[i][1]
 
-    Chem.MolToXYZFile(mol=p, filename=f"{destination_path}/{label}.xyz", confId=min_energy_index)
+    Chem.MolToXYZFile(mol=p, filename=f"{destination_path}/{format_filename_for_orca(label)}.xyz",
+                      confId=min_energy_index)
+
+
+def format_filename_for_orca(filename: str):
+    """Formats a given filename so it will work properly with ORCA."""
+    # Since ORCA does not like when "=" appears in a filename, I have decided to replace it with "db".
+    # This comes from a SMILES representation of a double bond, so I picked "db" for "double bond".
+    return filename.replace("=", "db")
 
 
 def conformer_search(mols_filename: str, smiles_col: str, label_col: str,

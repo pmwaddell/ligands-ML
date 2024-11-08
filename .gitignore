@@ -1,8 +1,7 @@
 /misc
 /reading
-/old_data
-/src/data/phosphine_data
-/src/data/diimine_data
+/misc/old_data
+/src/data/
 
 log.txt
 *.bibtex
