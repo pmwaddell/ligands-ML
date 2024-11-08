@@ -13,7 +13,7 @@ from utils import mkdir
 
 def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: str, RI: str,
                       functional: str="BP86", basis_set: str="def2-SVP", dispersion_correction:str ="D3BJ",
-                      grid:str ="", freq: bool=False, NMR: bool=False, cores=6) -> None:
+                      grid:str ="", charge: int=0, freq: bool=False, NMR: bool=False, cores=6) -> None:
     """Produces an ORCA input file for geom. opt. from xyz file."""
     # The choices of keywords here are from: https://sites.google.com/site/orcainputlibrary/geometry-optimizations
     # RI: RI-J approximation for Coulomb integrals: speed calculations at cost of small error, used for GGA calcs.
@@ -35,7 +35,8 @@ def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: st
     if grid != "":
         grid = f"\n! {grid}"
 
-    header = f"! {RI} {functional} {basis_set} {dispersion_correction} {job_keywords} {freq} {NMR}{grid}\n%pal\nnprocs {cores}\nend\n\n* xyz 0 1\n"
+    header = (f"! {RI} {functional} {basis_set} {dispersion_correction} {job_keywords} {freq} {NMR}{grid}"
+              f"\n%pal\nnprocs {cores}\nend\n\n* xyz {charge} 1\n")
     with open(xyz_filename, 'r') as xyz_file:
         # Remove the initial lines of the xyz file, leaving only the atoms and their coordinates:
         inp_contents = "\n".join(xyz_file.read().splitlines()[2:])
@@ -46,7 +47,7 @@ def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: st
 
 def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str, RI: str,
                    functional: str="BP86", basis_set: str="def2-SVP", dispersion_correction:str ="D3BJ", grid: str="",
-                   freq: bool=False, NMR: bool=False, redo_all: bool=False) -> None:
+                   charge: int=0, freq: bool=False, NMR: bool=False, redo_all: bool=False) -> None:
     """Performs ORCA calculations based on the xyz files in the given directory."""
     log = f"{job_type} started {datetime.datetime.now()}\n\nCreating directories:\n"
 
@@ -75,6 +76,7 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
             RI=RI,
             job_type=job_type,
             grid=grid,
+            charge=charge,
             freq=freq,
             NMR=NMR,
             xyz_filename=xyz_file_path,
