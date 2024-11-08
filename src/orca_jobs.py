@@ -4,6 +4,7 @@
 # geometrical errors. Often the slightly higher accuracy from hybrid functionals is not worth the effort.
 import os
 import subprocess
+import time
 import datetime
 import glob
 
@@ -103,16 +104,17 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
                         print(msg)
                         log += msg + "\n"
 
-        print(f"Performing {job_type} on {cid}: ", end="")
+        print(f"{datetime.datetime.now()} Performing {job_type} on {cid}: ", end="")
 
         # Load the absolute path to ORCA from config.yaml; this is necessary for calculations run in parallel.
         with open("config.yaml") as f:
             cfg = yaml.load(f, Loader=yaml.FullLoader)
             orca_path = cfg['orca_path']
 
+        start = time.time()
         orca_command = f"{orca_path} {destination_path}/{cid}/{cid}.inp > {destination_path}/{cid}/{cid}.out"
         subprocess.run(orca_command, shell=True)
-        print("complete.")
+        print(f"complete. Total time: {datetime.timedelta(seconds=time.time() - start)}")
         log += f"{job_type} for {cid} completed at {datetime.datetime.now()}\n"
         with open("logs/log.txt", "w") as log_file:
             log_file.write(log)

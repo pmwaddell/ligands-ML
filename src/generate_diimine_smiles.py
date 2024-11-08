@@ -3,6 +3,10 @@ from rdkit import Chem
 
 
 def format_R_smiles(R):
+    """
+    Considering Hs are implicit in SMILES, if the R group is H, it should not appear in the molecule's SMILES.
+    Otherwise, it should have parentheses around it.
+    """
     if R == "H":
         return ""
     else:
@@ -10,12 +14,14 @@ def format_R_smiles(R):
 
 
 def smiles_to_canonical_smiles(smiles):
+    """Converts any given SMILES representation of a molecule to the canonical SMILES representation."""
     return Chem.MolToSmiles(
         Chem.MolFromSmiles(smiles)
     )
 
 
 def make_diimine_complex_smiles(R1="H", R2="H", backbone_sub="H", Ni_L1="C", Ni_L2="C"):
+    """Produces the SMILES for a Ni diimine complex given substituents on aryl and backbone, and ligands on Ni."""
     R1, R2, backbone_sub = format_R_smiles(R1), format_R_smiles(R2), format_R_smiles(backbone_sub)
     Ar1 = f"c2c{R1}cc{R2}cc{R1}2"
     Ar2 = f"c3c{R1}cc{R2}cc{R1}3"
@@ -29,6 +35,7 @@ def make_diimine_complex_smiles(R1="H", R2="H", backbone_sub="H", Ni_L1="C", Ni_
 
 
 def make_diimine_ligand_smiles(R1="H", R2="H", backbone_sub="H"):
+    """Produces the SMILES for a diimine ligand given substituents on the aryls and backbone."""
     R1, R2, backbone_sub = format_R_smiles(R1), format_R_smiles(R2), format_R_smiles(backbone_sub)
     Ar1 = f"c1c{R1}cc{R2}cc{R1}1"
     Ar2 = f"c2c{R1}cc{R2}cc{R1}2"
