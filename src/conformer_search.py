@@ -35,7 +35,7 @@ def lowest_conf_search_from_smiles(smiles: str, label: str, destination_path: st
                       confId=min_energy_index)
 
 
-def format_filename_for_orca(filename: str):
+def format_filename_for_orca(filename: str) -> str:
     """Formats a given filename so it will work properly with ORCA."""
     # Since ORCA does not like when "=" appears in a filename, I have decided to replace it with "db".
     # This comes from a SMILES representation of a double bond, so I picked "db" for "double bond".

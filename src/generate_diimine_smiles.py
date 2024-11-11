@@ -2,7 +2,7 @@ import pandas as pd
 from rdkit import Chem
 
 
-def format_R_smiles(R):
+def format_R_smiles(R) -> str:
     """
     Considering Hs are implicit in SMILES, if the R group is H, it should not appear in the molecule's SMILES.
     Otherwise, it should have parentheses around it.
@@ -13,14 +13,14 @@ def format_R_smiles(R):
         return f"({R})"
 
 
-def smiles_to_canonical_smiles(smiles):
+def smiles_to_canonical_smiles(smiles) -> str:
     """Converts any given SMILES representation of a molecule to the canonical SMILES representation."""
     return Chem.MolToSmiles(
         Chem.MolFromSmiles(smiles)
     )
 
 
-def make_diimine_complex_smiles(R1="H", R2="H", backbone_sub="H", Ni_L1="C", Ni_L2="C"):
+def make_diimine_complex_smiles(R1="H", R2="H", backbone_sub="H", Ni_L1="C", Ni_L2="C") -> str:
     """Produces the SMILES for a Ni diimine complex given substituents on aryl and backbone, and ligands on Ni."""
     R1, R2, backbone_sub = format_R_smiles(R1), format_R_smiles(R2), format_R_smiles(backbone_sub)
     Ar1 = f"c2c{R1}cc{R2}cc{R1}2"
@@ -34,7 +34,7 @@ def make_diimine_complex_smiles(R1="H", R2="H", backbone_sub="H", Ni_L1="C", Ni_
     return f"C{backbone_sub}1=N({Ar1})[Ni](N({Ar2})=C{backbone_sub}1)({Ni_L1}){Ni_L2}"
 
 
-def make_diimine_ligand_smiles(R1="H", R2="H", backbone_sub="H"):
+def make_diimine_ligand_smiles(R1="H", R2="H", backbone_sub="H") -> str:
     """Produces the SMILES for a diimine ligand given substituents on the aryls and backbone."""
     R1, R2, backbone_sub = format_R_smiles(R1), format_R_smiles(R2), format_R_smiles(backbone_sub)
     Ar1 = f"c1c{R1}cc{R2}cc{R1}1"

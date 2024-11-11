@@ -72,7 +72,7 @@
 
 <div class="viewcode-block" id="format_filename_for_orca">
 <a class="viewcode-back" href="../conformer_search.html#conformer_search.format_filename_for_orca">[docs]</a>
-<span class="k">def</span> <span class="nf">format_filename_for_orca</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">format_filename_for_orca</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Formats a given filename so it will work properly with ORCA.&quot;&quot;&quot;</span>
     <span class="c1"># Since ORCA does not like when &quot;=&quot; appears in a filename, I have decided to replace it with &quot;db&quot;.</span>
     <span class="c1"># This comes from a SMILES representation of a double bond, so I picked &quot;db&quot; for &quot;double bond&quot;.</span>
