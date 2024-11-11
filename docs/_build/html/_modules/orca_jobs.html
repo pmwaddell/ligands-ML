@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>orca_jobs &#8212; ligands-ML  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for orca_jobs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># https://sites.google.com/site/orcainputlibrary/geometry-optimizations</span>
+<span class="c1"># Use GGA DFT functionals if they are accurate enough (depends on your system), with the RI-J approximation (default)</span>
+<span class="c1"># as that is often the fastest useful optimization one can do. Use of the RI-J approximation leads to minimal</span>
+<span class="c1"># geometrical errors. Often the slightly higher accuracy from hybrid functionals is not worth the effort.</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="c1"># from utils import mkdir</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">mkdir</span>  <span class="c1">## TODO: avoid relative import?</span>
+
+
+<div class="viewcode-block" id="make_inp_from_xyz">
+<a class="viewcode-back" href="../orca_jobs.html#orca_jobs.make_inp_from_xyz">[docs]</a>
+<span class="k">def</span> <span class="nf">make_inp_from_xyz</span><span class="p">(</span><span class="n">xyz_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">inp_destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">job_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">RI</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                      <span class="n">functional</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;BP86&quot;</span><span class="p">,</span> <span class="n">basis_set</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;def2-SVP&quot;</span><span class="p">,</span> <span class="n">dispersion_correction</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span><span class="s2">&quot;D3BJ&quot;</span><span class="p">,</span>
+                      <span class="n">grid</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">charge</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">NMR</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cores</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Produces an ORCA input file for geom. opt. from xyz file.&quot;&quot;&quot;</span>
+    <span class="c1"># The choices of keywords here are from: https://sites.google.com/site/orcainputlibrary/geometry-optimizations</span>
+    <span class="c1"># RI: RI-J approximation for Coulomb integrals: speed calculations at cost of small error, used for GGA calcs.</span>
+    <span class="c1"># RIJCOSX should be used with hybrid functionals.</span>
+    <span class="c1"># D3BJ: Grimme&#39;s D3 dispersion correction, with Becke-Johnson damping.</span>
+    <span class="c1"># TIGHTSCF: convergence tolerance level, this is recommended for geometry optimizations.</span>
+    <span class="c1"># NormalSCF: used for single point calculations.</span>
+    <span class="c1"># Here we&#39;re using 6 cores by default.</span>
+
+    <span class="k">if</span> <span class="n">job_type</span> <span class="o">==</span> <span class="s2">&quot;Geometry Optimization&quot;</span><span class="p">:</span>
+        <span class="n">job_keywords</span> <span class="o">=</span> <span class="s2">&quot;TIGHTSCF Opt&quot;</span>
+    <span class="k">elif</span> <span class="n">job_type</span> <span class="o">==</span> <span class="s2">&quot;Single Point Calculation&quot;</span><span class="p">:</span>
+        <span class="n">job_keywords</span> <span class="o">=</span> <span class="s2">&quot;NormalSCF&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown job type </span><span class="si">{</span><span class="n">job_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">freq</span> <span class="o">=</span> <span class="s2">&quot;Freq&quot;</span> <span class="k">if</span> <span class="n">freq</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">NMR</span> <span class="o">=</span> <span class="s2">&quot;NMR&quot;</span> <span class="k">if</span> <span class="n">NMR</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">grid</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">! </span><span class="si">{</span><span class="n">grid</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">header</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! </span><span class="si">{</span><span class="n">RI</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">functional</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">basis_set</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">dispersion_correction</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">job_keywords</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">NMR</span><span class="si">}{</span><span class="n">grid</span><span class="si">}</span><span class="s2">&quot;</span>
+              <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">%pal</span><span class="se">\n</span><span class="s2">nprocs </span><span class="si">{</span><span class="n">cores</span><span class="si">}</span><span class="se">\n</span><span class="s2">end</span><span class="se">\n\n</span><span class="s2">* xyz </span><span class="si">{</span><span class="n">charge</span><span class="si">}</span><span class="s2"> 1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">xyz_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">xyz_file</span><span class="p">:</span>
+        <span class="c1"># Remove the initial lines of the xyz file, leaving only the atoms and their coordinates:</span>
+        <span class="n">inp_contents</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xyz_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">2</span><span class="p">:])</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">inp_destination_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">inp_file</span><span class="p">:</span>
+        <span class="n">inp_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span> <span class="o">+</span> <span class="n">inp_contents</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">*&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="orca_batch_job">
+<a class="viewcode-back" href="../orca_jobs.html#orca_jobs.orca_batch_job">[docs]</a>
+<span class="k">def</span> <span class="nf">orca_batch_job</span><span class="p">(</span><span class="n">path_to_xyz_files</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">job_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">RI</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="n">functional</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;BP86&quot;</span><span class="p">,</span> <span class="n">basis_set</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;def2-SVP&quot;</span><span class="p">,</span> <span class="n">dispersion_correction</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span><span class="s2">&quot;D3BJ&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                   <span class="n">charge</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">NMR</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">redo_all</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs ORCA calculations based on the xyz files in the given directory.&quot;&quot;&quot;</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_type</span><span class="si">}</span><span class="s2"> started </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">Creating directories:</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="c1"># Recursively search for the paths to all xyz files anywhere under the given path:</span>
+    <span class="n">xyz_file_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path_to_xyz_files</span><span class="si">}</span><span class="s2">/**/*.xyz&quot;</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cids</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">xyz_file_path</span> <span class="ow">in</span> <span class="n">xyz_file_paths</span><span class="p">:</span>
+        <span class="c1"># We are trying to stick to Linux-style path formatting, so replace the Windows \\ with /:</span>
+        <span class="n">xyz_file_path</span> <span class="o">=</span> <span class="n">xyz_file_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="c1"># Basically, for all intents and purposes, CID herein just means the unique label for this molecule.</span>
+        <span class="c1"># It wouldn&#39;t have to be an actual CID.</span>
+        <span class="n">cid</span> <span class="o">=</span> <span class="n">xyz_file_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">cids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mkdir</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">: Directory creation in </span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2"> unsuccessful with exception </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">continue</span>
+
+        <span class="n">make_inp_from_xyz</span><span class="p">(</span>
+            <span class="n">functional</span><span class="o">=</span><span class="n">functional</span><span class="p">,</span>
+            <span class="n">basis_set</span><span class="o">=</span><span class="n">basis_set</span><span class="p">,</span>
+            <span class="n">dispersion_correction</span><span class="o">=</span><span class="n">dispersion_correction</span><span class="p">,</span>
+            <span class="n">RI</span><span class="o">=</span><span class="n">RI</span><span class="p">,</span>
+            <span class="n">job_type</span><span class="o">=</span><span class="n">job_type</span><span class="p">,</span>
+            <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span>
+            <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
+            <span class="n">freq</span><span class="o">=</span><span class="n">freq</span><span class="p">,</span>
+            <span class="n">NMR</span><span class="o">=</span><span class="n">NMR</span><span class="p">,</span>
+            <span class="n">xyz_filename</span><span class="o">=</span><span class="n">xyz_file_path</span><span class="p">,</span>
+            <span class="n">inp_destination_path</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">.inp&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">job_type</span><span class="si">}</span><span class="s2"> part:</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">cids</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">redo_all</span><span class="p">:</span>
+            <span class="c1"># If an existing .out file is found in the directory, check if it seems that it was from a successful calc.</span>
+            <span class="c1"># If so, skip doing the geometry optimization for that CID.</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">.out&quot;</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">.out&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">out_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;****ORCA TERMINATED NORMALLY****&quot;</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Existing .out file from completed calculation found in </span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">/, &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;skipping calculation.&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="n">log</span> <span class="o">+=</span> <span class="n">msg</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Existing .out file from apparently unsuccessful calculation found &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;in </span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">/, redoing calculation.&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="n">log</span> <span class="o">+=</span> <span class="n">msg</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2"> Performing </span><span class="si">{</span><span class="n">job_type</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Load the absolute path to ORCA from config.yaml; this is necessary for calculations run in parallel.</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+            <span class="n">orca_path</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;orca_path&#39;</span><span class="p">]</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">orca_command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">orca_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">.inp &gt; </span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">.out&quot;</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">orca_command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;complete. Total time: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_type</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2"> completed at </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;logs/log.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+            <span class="n">log_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">job_type</span><span class="si">}</span><span class="s2">s complete.&quot;</span><span class="p">)</span>
+    <span class="n">log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">job_type</span><span class="si">}</span><span class="s2"> ended </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;logs/log.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+        <span class="n">log_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">log</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ligand geometry optimizations: &quot;</span><span class="p">)</span>
+    <span class="n">orca_batch_job</span><span class="p">(</span><span class="n">path_to_xyz_files</span><span class="o">=</span><span class="s2">&quot;data/diimine_data/conf_search_ligand&quot;</span><span class="p">,</span>
+                   <span class="n">destination_path</span><span class="o">=</span><span class="s2">&quot;data/diimine_data/geom_opt_ligand_BP86&quot;</span><span class="p">,</span>
+                   <span class="n">functional</span><span class="o">=</span><span class="s2">&quot;BP86&quot;</span><span class="p">,</span>
+                   <span class="n">basis_set</span><span class="o">=</span><span class="s2">&quot;def2-SVP&quot;</span><span class="p">,</span>
+                   <span class="n">RI</span><span class="o">=</span><span class="s1">&#39;RI&#39;</span><span class="p">,</span>
+                   <span class="n">dispersion_correction</span><span class="o">=</span><span class="s2">&quot;D3BJ&quot;</span><span class="p">,</span>
+                   <span class="n">job_type</span><span class="o">=</span><span class="s2">&quot;Geometry Optimization&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Ni carbonyl complex geometry optimizations: &quot;</span><span class="p">)</span>
+    <span class="n">orca_batch_job</span><span class="p">(</span><span class="n">path_to_xyz_files</span><span class="o">=</span><span class="s2">&quot;data/diimine_data/conf_search_NiCO2&quot;</span><span class="p">,</span>
+                   <span class="n">destination_path</span><span class="o">=</span><span class="s2">&quot;data/diimine_data/geom_opt_NiCO2&quot;</span><span class="p">,</span>
+                   <span class="n">functional</span><span class="o">=</span><span class="s2">&quot;B3LYP&quot;</span><span class="p">,</span>
+                   <span class="n">basis_set</span><span class="o">=</span><span class="s2">&quot;def2-TZVP&quot;</span><span class="p">,</span>
+                   <span class="n">RI</span><span class="o">=</span><span class="s1">&#39;RIJCOSX&#39;</span><span class="p">,</span>
+                   <span class="n">dispersion_correction</span><span class="o">=</span><span class="s2">&quot;D3BJ&quot;</span><span class="p">,</span>
+                   <span class="n">job_type</span><span class="o">=</span><span class="s2">&quot;Geometry Optimization&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ligands-ML</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">src</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Peter Waddell.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

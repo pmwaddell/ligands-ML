@@ -2,14 +2,15 @@
 # Use GGA DFT functionals if they are accurate enough (depends on your system), with the RI-J approximation (default)
 # as that is often the fastest useful optimization one can do. Use of the RI-J approximation leads to minimal
 # geometrical errors. Often the slightly higher accuracy from hybrid functionals is not worth the effort.
+import datetime
+import glob
 import os
 import subprocess
 import time
-import datetime
-import glob
 
 import yaml
-from utils import mkdir
+
+from utils import mkdir  ## TODO: avoid relative import?
 
 
 def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: str, RI: str,

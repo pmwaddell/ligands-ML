@@ -28,7 +28,9 @@ def make_mod_phos_df(phos_df: pd.DataFrame, mod: Callable) -> pd.DataFrame:
     return result
 
 
-# from request_monophosphines import draw_from_phos_df
-df = pd.read_csv('data/phosphine_data/pubchem_requests/phosphine_set_redux.csv')
-po_df = make_mod_phos_df(df, phos_smiles_to_nico3_complex_smiles)
-po_df.to_csv('phosphine_data/modified_requests/PNiCO3_set_redux.csv', index=False)
+if __name__ == "__main__":
+    pass
+    # from request_monophosphines import draw_from_phos_df
+    # df = pd.read_csv('data/phosphine_data/pubchem_requests/phosphine_set_redux.csv')
+    # po_df = make_mod_phos_df(df, phos_smiles_to_nico3_complex_smiles)
+    # po_df.to_csv('phosphine_data/modified_requests/PNiCO3_set_redux.csv', index=False)
