@@ -1,0 +1,7 @@
+Geometry Optimization started 2024-11-11 10:47:52.024711
+
+Creating directories:
+
+Geometry Optimization part:
+Geometry Optimization for Br_H_H completed at 2024-11-11 21:42:08.761195
+Geometry Optimization for C#N_H_H completed at 2024-11-12 08:25:06.857154
