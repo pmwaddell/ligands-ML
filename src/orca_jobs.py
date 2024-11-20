@@ -10,7 +10,7 @@ import time
 
 import yaml
 
-from utils import mkdir  ## TODO: avoid relative import?
+from src.utils import mkdir
 
 
 def make_inp_from_xyz(xyz_filename: str, inp_destination_path: str, job_type: str, RI: str,
@@ -121,35 +121,10 @@ def orca_batch_job(path_to_xyz_files: str, destination_path: str, job_type: str,
         subprocess.run(orca_command, shell=True)
         print(f"complete. Total time: {datetime.timedelta(seconds=time.time() - start)}")
         log += f"{job_type} for {cid} completed at {datetime.datetime.now()}\n"
-        with open("logs/NiCO2_geom_opt_log.txt", "w") as log_file:
+        with open("logs/log.txt", "w") as log_file:
             log_file.write(log)
 
     print(f"\n{job_type}s complete.")
     log += f"\n{job_type} ended {datetime.datetime.now()}\n"
-    with open("logs/NiCO2_geom_opt_log.txt", "w") as log_file:
+    with open("logs/log.txt", "w") as log_file:
         log_file.write(log)
-
-
-if __name__ == "__main__":
-    print("\n\nNi ethylene complex single point calcs: ")
-    orca_batch_job(path_to_xyz_files="data/diimine_data/geom_opt_NiE",
-                   destination_path="data/diimine_data/single_pt_NiE",
-                   functional="B3LYP",
-                   basis_set="def2-TZVP",
-                   RI='RIJCOSX',
-                   dispersion_correction="D3BJ",
-                   charge=1,
-                   NMR=True,
-                   freq=True,
-                   job_type="Single Point Calculation")
-
-    print("\n\nNiCO2 complex single point calcs: ")
-    orca_batch_job(path_to_xyz_files="data/diimine_data/geom_opt_NiCO2",
-                   destination_path="data/diimine_data/single_pt_NiCO2",
-                   functional="B3LYP",
-                   basis_set="def2-TZVP",
-                   RI='RIJCOSX',
-                   dispersion_correction="D3BJ",
-                   NMR=True,
-                   freq=True,
-                   job_type="Single Point Calculation")

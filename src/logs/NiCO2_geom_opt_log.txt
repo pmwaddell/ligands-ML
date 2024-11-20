@@ -1,22 +1,12 @@
-Geometry Optimization started 2024-11-14 13:49:33.135901
+Single Point Calculation started 2024-11-19 14:50:22.187585
 
 Creating directories:
 
-Geometry Optimization part:
-Existing .out file from completed calculation found in data/diimine_data/geom_opt_NiE/Br_H_H/, skipping calculation.
-Existing .out file from completed calculation found in data/diimine_data/geom_opt_NiE/C#N_H_H/, skipping calculation.
-Existing .out file from completed calculation found in data/diimine_data/geom_opt_NiE/C(C)C_H_H/, skipping calculation.
-Existing .out file from completed calculation found in data/diimine_data/geom_opt_NiE/C(F)(F)F_H_H/, skipping calculation.
-Existing .out file from apparently unsuccessful calculation found in data/diimine_data/geom_opt_NiE/CdbO_H_H/, redoing calculation.
-Geometry Optimization for CdbO_H_H completed at 2024-11-15 02:09:22.105506
-Geometry Optimization for C_H_H completed at 2024-11-15 09:42:49.664330
-Geometry Optimization for F_H_H completed at 2024-11-15 17:16:13.572368
-Geometry Optimization for H_H_H completed at 2024-11-15 20:35:48.669853
-Geometry Optimization for N(C)C_H_H completed at 2024-11-16 22:02:08.586524
-Geometry Optimization for N(CC)CC_H_H completed at 2024-11-17 20:56:34.970371
-Geometry Optimization for N(dbO)dbO_H_H completed at 2024-11-18 04:54:26.884000
-Geometry Optimization for OC(C)C_H_H completed at 2024-11-18 21:12:40.528018
-Geometry Optimization for OC_H_H completed at 2024-11-19 05:07:54.637954
-Geometry Optimization for S(C)(dbO)dbO_H_H completed at 2024-11-19 14:03:43.146441
-
-Geometry Optimization ended 2024-11-19 14:03:43.154760
+Single Point Calculation part:
+Single Point Calculation for Br_H_H completed at 2024-11-19 16:38:04.690824
+Single Point Calculation for C(C)C_H_H completed at 2024-11-19 21:50:20.462498
+Single Point Calculation for C(F)(F)F_H_H completed at 2024-11-20 00:59:59.836214
+Single Point Calculation for C(F)(F)F_H_H_manual completed at 2024-11-20 03:55:23.794917
+Single Point Calculation for C_H_H completed at 2024-11-20 05:42:58.192495
+Single Point Calculation for F_H_H completed at 2024-11-20 06:49:47.983495
+Single Point Calculation for N(CC)CC_H_H completed at 2024-11-20 17:44:49.666327

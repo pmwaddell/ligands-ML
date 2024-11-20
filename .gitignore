@@ -1,8 +1,9 @@
 /misc
 /reading
 /misc/old_data
-/src/data/
-/NiE_new_inputs
+/src/data
+/src/notes
+/future_input_files
 
 log.txt
 *.bibtex
