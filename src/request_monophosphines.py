@@ -118,7 +118,7 @@ def draw_from_phos_df(phos_df: pd.DataFrame, filename: str="phosphine_set.png", 
             [Chem.MolFromSmiles(smiles) for smiles in phos_df["CanonicalSMILES"]],
             molsPerRow=20,
             subImgSize=(400,400),
-            legends=phos_df["legend"].astype(str).to_list()
+            legends=phos_df[legend].astype(str).to_list()
         ).save("images/" + filename)
     else:
         Draw.MolsToGridImage(

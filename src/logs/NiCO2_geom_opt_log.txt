@@ -10,3 +10,4 @@ Single Point Calculation for C(F)(F)F_H_H_manual completed at 2024-11-20 03:55:2
 Single Point Calculation for C_H_H completed at 2024-11-20 05:42:58.192495
 Single Point Calculation for F_H_H completed at 2024-11-20 06:49:47.983495
 Single Point Calculation for N(CC)CC_H_H completed at 2024-11-20 17:44:49.666327
+Single Point Calculation for OC(C)C_H_H completed at 2024-11-20 23:30:08.643621
